@@ -63,4 +63,9 @@ export column
 export MatMulFunctor
 export setindex
 export eltype_or, size_or
+
+# precompilations
+include("precompile.jl")
+__precompile__()
+
 end
