@@ -5,6 +5,16 @@
 @inline getindex{N, M, T}(a::Mat{N, M, T}, i::Int) = a[ind2sub((N,M), i)...]
 @inline getindex(A::FixedArray, I::Tuple) = map(IndexFunctor(A), I)
 
+# Note: these methods are not invoked with @inbounds, and must be called
+# directly since the AST is not rewritten.
+# See: https://github.com/JuliaLang/julia/pull/8227
+function Base.unsafe_getindex{N,I}(v::FixedVector{N,Int64}, ::Type{Val{I}})
+    x = v.(1)
+    Core.Intrinsics.llvmcall("""%2 = extractvalue [$N x i64] %0, $(I-1)
+        ret i64 %2""", Int64, Tuple{NTuple{N,Int64}}, x)
+end
+
+
 @inline setindex(a::FixedArray, value, index::Int...) = map(SetindexFunctor(a, value, index), typeof(a))
 
 @inline column{N, T}(v::FixedVector{N, T}) = v
